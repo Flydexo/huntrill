@@ -6,8 +6,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const robotoMono = Roboto_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "Huntrill - Replica",
-  description: "Archives des punchlines. Version Replica.",
+  title: "Huntrill",
+  description: "Archives des punchlines.",
 };
 
 export default function RootLayout({
@@ -17,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${inter.variable} ${robotoMono.variable} font-sans antialiased selection:bg-signal selection:text-white`}>
+      <body
+        className={`${inter.variable} ${robotoMono.variable} font-sans antialiased selection:bg-signal selection:text-white`}
+      >
         {children}
       </body>
     </html>
