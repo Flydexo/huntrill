@@ -21,7 +21,7 @@ export default function RootLayout({
       <Script
         defer
         data-domain="huntrill.abelink.app"
-        src="http://plausible.flydexo.com/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
+        src="https://plausible.flydexo.com/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
       />
       <Script id="plausible-setup">
         {`window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`}
