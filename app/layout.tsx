@@ -24,7 +24,9 @@ export default function RootLayout({
       ></script>
       <script>
         window.plausible = window.plausible || function(){" "}
-        {(window.plausible.q = window.plausible.q || []).push(arguments)}
+        {((window as any).plausible.q = (window as any).plausible.q || []).push(
+          arguments,
+        )}
       </script>
 
       <body
