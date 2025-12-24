@@ -1,65 +1,139 @@
-import Image from "next/image";
+'use client'
+
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { supabase } from '@/lib/supabaseClient'
+import { Punchline } from '@/lib/types'
+import PunchlineCard from '@/components/PunchlineCard'
+import Header from '@/components/Header'
+import { Loader2 } from 'lucide-react'
+
+const PAGE_SIZE = 10
 
 export default function Home() {
+  const [punchlines, setPunchlines] = useState<Punchline[]>([])
+  const [loading, setLoading] = useState(true)
+  const [hasMore, setHasMore] = useState(true)
+  const [_, setPage] = useState(0)
+  const loaderRef = useRef<HTMLDivElement>(null)
+
+  const fetchPunchlines = useCallback(async (pageIndex: number) => {
+    try {
+      const from = pageIndex * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+
+      const { data, error } = await supabase
+        .from('punchlines')
+        .select('*')
+        .order('score', { ascending: false }) // Best first
+        .order('created_at', { ascending: false }) // Then newest
+        .range(from, to)
+
+      if (error) {
+        throw error
+      }
+
+      if (data) {
+        if (data.length < PAGE_SIZE) {
+          setHasMore(false)
+        }
+        setPunchlines(prev => pageIndex === 0 ? data : [...prev, ...data])
+      }
+    } catch (error) {
+      console.error('Error fetching punchlines:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchPunchlines(0)
+  }, [fetchPunchlines])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          setPage(prev => {
+            const newPage = prev + 1
+            fetchPunchlines(newPage)
+            return newPage
+          })
+        }
+      },
+      { threshold: 1.0 }
+    )
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [hasMore, loading, fetchPunchlines])
+
+  const handleVote = async (id: number, upDelta: number, downDelta: number) => {
+    try {
+      const { error } = await supabase.rpc('vote_punchline', {
+        punchline_id: id,
+        up_delta: upDelta,
+        down_delta: downDelta
+      })
+
+      if (error) throw error
+      
+    } catch (error) {
+      console.error('Error voting:', error)
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-paper pb-20 selection:bg-signal selection:text-white">
+      <Header />
+      
+      <main className="container mx-auto max-w-4xl px-0 sm:px-4 sm:pt-10">
+        
+        {/* Intro / Header of list */}
+        <div className="mb-8 border-b border-concrete px-4 py-8 sm:px-0">
+            <h2 className="font-sans text-4xl font-black uppercase tracking-tighter text-carbon md:text-6xl">
+              Archives
+              <span className="block text-signal">Replica</span>
+            </h2>
+            <div className="mt-4 flex max-w-md items-center gap-4 border-l-2 border-concrete pl-4">
+                <p className="font-mono text-xs text-concrete">
+                    COLLECTION: HUNTRILL<br/>
+                    SEASON: 2025<br/>
+                    STATUS: PUBLIC_ACCESS
+                </p>
+            </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex flex-col gap-0 sm:gap-4">
+          {punchlines.map((p) => (
+            <PunchlineCard key={p.id} punchline={p} onVote={handleVote} />
+          ))}
+        </div>
+
+        {/* Loading State / Infinite Scroll Trigger */}
+        <div ref={loaderRef} className="mt-10 flex justify-center p-4">
+          {loading && <Loader2 className="animate-spin text-signal" size={32} />}
+          {!loading && !hasMore && punchlines.length > 0 && (
+            <div className="border border-concrete px-4 py-2">
+                <p className="font-mono text-xs text-concrete">END_OF_ARCHIVE</p>
+            </div>
+          )}
+          {!loading && punchlines.length === 0 && (
+             <div className="border border-dashed border-concrete p-10 text-center">
+                <p className="font-mono text-sm text-carbon">ARCHIVE_EMPTY</p>
+             </div>
+          )}
         </div>
       </main>
+      
+      {/* Footer */}
+      <footer className="mt-20 border-t border-concrete py-10 text-center bg-paper">
+         <p className="font-mono text-xs text-concrete">
+            © 2025 HUNTRILL // REPLICA SYSTEM
+         </p>
+      </footer>
     </div>
-  );
+  )
 }

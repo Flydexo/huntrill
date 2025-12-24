@@ -1,26 +1,50 @@
 @import "tailwindcss";
+@config "../tailwind.config.ts";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono);
+
+  --color-paper: #F5F5F5;
+  --color-carbon: #1A1A1A;
+  --color-signal: #FF5F00;
+  --color-concrete: #A0A0A0;
+  --color-night: #0D1117;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-carbon);
+}
+
+/* Custom scrollbar - Industrial/Technical */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+  border-left: 1px solid var(--color-concrete);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-concrete);
+  border: 2px solid var(--color-paper);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-signal);
+}
+
+/* Utility for the "censure" effect */
+@utility censure {
+  background-color: var(--color-carbon);
+  color: transparent;
+  user-select: none;
 }
